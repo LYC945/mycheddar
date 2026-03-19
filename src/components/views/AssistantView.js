@@ -265,10 +265,9 @@ export class AssistantView extends LitElement {
     }
 
     getCurrentResponse() {
-        const profileNames = this.getProfileNames();
         return this.responses.length > 0 && this.currentResponseIndex >= 0
             ? this.responses[this.currentResponseIndex]
-            : `Hey, Im listening to your ${profileNames[this.selectedProfile] || 'session'}?`;
+            : `**Ready** — Press **Ctrl+0** to capture the screen and get an answer.\n\nYou can also type a question below.`;
     }
 
     renderMarkdown(content) {

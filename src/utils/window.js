@@ -1,4 +1,5 @@
 const { BrowserWindow, globalShortcut, ipcMain, screen } = require('electron');
+const { captureAndAnalyze } = require('./gemini');
 const path = require('node:path');
 const fs = require('node:fs');
 const os = require('os');
@@ -24,7 +25,7 @@ function ensureDataDirectories() {
     return { imageDir, audioDir };
 }
 
-function createWindow(sendToRenderer, geminiSessionRef) {
+function createWindow(sendToRenderer) {
     // Get layout preference (default to 'normal')
     let windowWidth = 1100;
     let windowHeight = 600;
@@ -113,17 +114,17 @@ function createWindow(sendToRenderer, geminiSessionRef) {
                         mainWindow.setContentProtection(true);
                     }
 
-                    updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer, geminiSessionRef);
+                    updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer);
                 })
                 .catch(() => {
                     // Default to content protection enabled
                     mainWindow.setContentProtection(true);
-                    updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer, geminiSessionRef);
+                    updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer);
                 });
         }, 150);
     });
 
-    setupWindowIpcHandlers(mainWindow, sendToRenderer, geminiSessionRef);
+    setupWindowIpcHandlers(mainWindow, sendToRenderer);
 
     return mainWindow;
 }
@@ -142,10 +143,11 @@ function getDefaultKeybinds() {
         nextResponse: isMac ? 'Cmd+]' : 'Ctrl+]',
         scrollUp: isMac ? 'Cmd+Shift+Up' : 'Ctrl+Shift+Up',
         scrollDown: isMac ? 'Cmd+Shift+Down' : 'Ctrl+Shift+Down',
+        captureAndAnalyze: isMac ? 'Cmd+0' : 'Ctrl+0',
     };
 }
 
-function updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer, geminiSessionRef) {
+function updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer) {
     console.log('Updating global shortcuts with:', keybinds);
 
     // Unregister all existing shortcuts
@@ -303,9 +305,22 @@ function updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer, geminiSessi
             console.error(`Failed to register scrollDown (${keybinds.scrollDown}):`, error);
         }
     }
+
+    // Register capture and analyze shortcut (Ctrl+0 / Cmd+0) - image only, no audio
+    if (keybinds.captureAndAnalyze) {
+        try {
+            globalShortcut.register(keybinds.captureAndAnalyze, async () => {
+                console.log('Capture and analyze shortcut triggered');
+                await captureAndAnalyze();
+            });
+            console.log(`Registered captureAndAnalyze: ${keybinds.captureAndAnalyze}`);
+        } catch (error) {
+            console.error(`Failed to register captureAndAnalyze (${keybinds.captureAndAnalyze}):`, error);
+        }
+    }
 }
 
-function setupWindowIpcHandlers(mainWindow, sendToRenderer, geminiSessionRef) {
+function setupWindowIpcHandlers(mainWindow, sendToRenderer) {
     ipcMain.on('view-changed', (event, view) => {
         if (view !== 'assistant' && !mainWindow.isDestroyed()) {
             mainWindow.setIgnoreMouseEvents(false);
@@ -320,7 +335,7 @@ function setupWindowIpcHandlers(mainWindow, sendToRenderer, geminiSessionRef) {
 
     ipcMain.on('update-keybinds', (event, newKeybinds) => {
         if (!mainWindow.isDestroyed()) {
-            updateGlobalShortcuts(newKeybinds, mainWindow, sendToRenderer, geminiSessionRef);
+            updateGlobalShortcuts(newKeybinds, mainWindow, sendToRenderer);
         }
     });
 
@@ -468,6 +483,10 @@ function setupWindowIpcHandlers(mainWindow, sendToRenderer, geminiSessionRef) {
                 case 'history':
                     targetWidth = baseWidth;
                     targetHeight = layoutMode === 'compact' ? 450 : 550;
+                    break;
+                case 'knowledge':
+                    targetWidth = baseWidth;
+                    targetHeight = layoutMode === 'compact' ? 480 : 580;
                     break;
                 case 'advanced':
                     targetWidth = baseWidth;

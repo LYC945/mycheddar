@@ -95,6 +95,7 @@ export class AppHeader extends LitElement {
         onCustomizeClick: { type: Function },
         onHelpClick: { type: Function },
         onHistoryClick: { type: Function },
+        onKnowledgeClick: { type: Function },
         onCloseClick: { type: Function },
         onBackClick: { type: Function },
         onHideToggleClick: { type: Function },
@@ -111,6 +112,7 @@ export class AppHeader extends LitElement {
         this.onCustomizeClick = () => {};
         this.onHelpClick = () => {};
         this.onHistoryClick = () => {};
+        this.onKnowledgeClick = () => {};
         this.onCloseClick = () => {};
         this.onBackClick = () => {};
         this.onHideToggleClick = () => {};
@@ -180,6 +182,7 @@ export class AppHeader extends LitElement {
             help: 'Help & Shortcuts',
             history: 'Conversation History',
             advanced: 'Advanced Tools',
+            knowledge: 'Knowledge Library',
             assistant: 'Cheating Daddy',
         };
         return titles[this.currentView] || 'Cheating Daddy';
@@ -194,7 +197,7 @@ export class AppHeader extends LitElement {
     }
 
     isNavigationView() {
-        const navigationViews = ['customize', 'help', 'history', 'advanced'];
+        const navigationViews = ['customize', 'help', 'history', 'advanced', 'knowledge'];
         return navigationViews.includes(this.currentView);
     }
 
@@ -213,6 +216,16 @@ export class AppHeader extends LitElement {
                         : ''}
                     ${this.currentView === 'main'
                         ? html`
+                              <button class="icon-button" @click=${this.onKnowledgeClick} title="Knowledge Library (Ctrl+0 to analyze)">
+                                  <svg width="24px" height="24px" stroke-width="1.7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" color="currentColor">
+                                      <path d="M4 19V5C4 3.89543 4.89543 3 6 3H19.4C19.7314 3 20 3.26863 20 3.6V16.7143" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                                      <path d="M6 17L20 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                                      <path d="M6 21L20 21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                                      <path d="M6 21C4.89543 21 4 20.1046 4 19C4 17.8954 4.89543 17 6 17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+                                      <path d="M9 7L15 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                                      <path d="M9 11L12 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                                  </svg>
+                              </button>
                               <button class="icon-button" @click=${this.onHistoryClick}>
                                   <?xml version="1.0" encoding="UTF-8"?><svg
                                       width="24px"

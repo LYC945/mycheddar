@@ -93,3 +93,5 @@ typings/
 out/
 .specstory
 .specstory/
+.claude/
+my_gemini_api_key.txt

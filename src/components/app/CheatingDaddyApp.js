@@ -7,6 +7,7 @@ import { HistoryView } from '../views/HistoryView.js';
 import { AssistantView } from '../views/AssistantView.js';
 import { OnboardingView } from '../views/OnboardingView.js';
 import { AdvancedView } from '../views/AdvancedView.js';
+import { KnowledgeView } from '../views/KnowledgeView.js';
 
 export class CheatingDaddyApp extends LitElement {
     static styles = css`
@@ -208,19 +209,18 @@ export class CheatingDaddyApp extends LitElement {
         this.requestUpdate();
     }
 
+    handleKnowledgeClick() {
+        this.currentView = 'knowledge';
+        this.requestUpdate();
+    }
+
     async handleClose() {
-        if (this.currentView === 'customize' || this.currentView === 'help' || this.currentView === 'history') {
+        if (this.currentView === 'customize' || this.currentView === 'help' || this.currentView === 'history' || this.currentView === 'knowledge') {
             this.currentView = 'main';
         } else if (this.currentView === 'assistant') {
-            cheddar.stopCapture();
-
-            // Close the session
-            if (window.require) {
-                const { ipcRenderer } = window.require('electron');
-                await ipcRenderer.invoke('close-session');
-            }
             this.sessionActive = false;
             this.currentView = 'main';
+            this.setStatus('');
             console.log('Session closed');
         } else {
             // Quit the entire application
@@ -251,13 +251,14 @@ export class CheatingDaddyApp extends LitElement {
             return;
         }
 
-        await cheddar.initializeGemini(this.selectedProfile, this.selectedLanguage);
-        // Pass the screenshot interval as string (including 'manual' option)
-        cheddar.startCapture(this.selectedScreenshotInterval, this.selectedImageQuality);
+        // Image-only mode: no Live session, no audio capture
+        // Just switch to assistant view - use Ctrl+0 to capture screen
         this.responses = [];
         this.currentResponseIndex = -1;
         this.startTime = Date.now();
+        this.sessionActive = true;
         this.currentView = 'assistant';
+        this.setStatus('Ready - Press Ctrl+0 to capture screen');
     }
 
     async handleAPIKeyHelp() {
@@ -409,6 +410,9 @@ export class CheatingDaddyApp extends LitElement {
             case 'advanced':
                 return html` <advanced-view></advanced-view> `;
 
+            case 'knowledge':
+                return html` <knowledge-view></knowledge-view> `;
+
             case 'assistant':
                 return html`
                     <assistant-view
@@ -442,6 +446,7 @@ export class CheatingDaddyApp extends LitElement {
                         .onHelpClick=${() => this.handleHelpClick()}
                         .onHistoryClick=${() => this.handleHistoryClick()}
                         .onAdvancedClick=${() => this.handleAdvancedClick()}
+                        .onKnowledgeClick=${() => this.handleKnowledgeClick()}
                         .onCloseClick=${() => this.handleClose()}
                         .onBackClick=${() => this.handleBackClick()}
                         .onHideToggleClick=${() => this.handleHideToggle()}
