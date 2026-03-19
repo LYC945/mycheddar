@@ -10,11 +10,26 @@ const PROMPT_FILE = path.join(KNOWLEDGE_DIR, 'prompt.txt');
 
 const DEFAULT_PROMPT = '针对question，给出简短正确的回答，答案包含英文。';
 
-// Ensure knowledge folder and default prompt exist
+// Ensure knowledge folder and default prompt exist; copy bundled defaults on first run
 function ensureKnowledgeDir() {
-    if (!fs.existsSync(KNOWLEDGE_DIR)) {
+    const isFirstRun = !fs.existsSync(KNOWLEDGE_DIR);
+    if (isFirstRun) {
         fs.mkdirSync(KNOWLEDGE_DIR, { recursive: true });
         console.log('Created knowledge folder:', KNOWLEDGE_DIR);
+
+        // Copy bundled default knowledge files
+        const defaultDir = path.join(__dirname, '..', 'default-knowledge');
+        if (fs.existsSync(defaultDir)) {
+            const files = fs.readdirSync(defaultDir);
+            for (const file of files) {
+                const src = path.join(defaultDir, file);
+                const dest = path.join(KNOWLEDGE_DIR, file);
+                if (fs.statSync(src).isFile()) {
+                    fs.copyFileSync(src, dest);
+                    console.log('Copied default knowledge file:', file);
+                }
+            }
+        }
     }
     if (!fs.existsSync(PROMPT_FILE)) {
         fs.writeFileSync(PROMPT_FILE, DEFAULT_PROMPT, 'utf-8');
